@@ -47,3 +47,6 @@ next-env.d.ts
 *.backup
 *.backup.ts
 *.backup.tsx
+
+# Allow safe environment template
+!.env.example

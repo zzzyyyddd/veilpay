@@ -14,8 +14,22 @@ export type StoredInvoice = {
 const INVOICE_FILE = path.join(process.cwd(), "data", "invoices.json");
 
 export async function getInvoices(): Promise<StoredInvoice[]> {
-  const data = await fs.readFile(INVOICE_FILE, "utf8");
-  return JSON.parse(data);
+  try {
+    const data = await fs.readFile(INVOICE_FILE, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      await fs.mkdir(path.dirname(INVOICE_FILE), { recursive: true });
+      await fs.writeFile(INVOICE_FILE, "[]", "utf8");
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 export async function saveInvoice(

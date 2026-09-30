@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { saveInvoice } from "@/lib/invoiceStore";
 
-const MERCHANT_ADDRESS =
-  process.env.ZCASH_MERCHANT_ADDRESS ?? "";
+const MERCHANT_ADDRESS = (() => {
+  const address = process.env.ZCASH_MERCHANT_ADDRESS;
+
+  if (!address) {
+    throw new Error("ZCASH_MERCHANT_ADDRESS is not configured");
+  }
+
+  return address;
+})();
 
 export async function POST(request: Request) {
   try {

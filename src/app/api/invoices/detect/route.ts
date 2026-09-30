@@ -4,7 +4,15 @@ import {
   updateInvoiceStatus,
 } from "@/lib/invoiceStore";
 
-const MERCHANT_ACCOUNT = process.env.ZCASH_MERCHANT_ACCOUNT;
+const MERCHANT_ACCOUNT = (() => {
+  const account = process.env.ZCASH_MERCHANT_ACCOUNT;
+
+  if (!account) {
+    throw new Error("ZCASH_MERCHANT_ACCOUNT is not configured");
+  }
+
+  return account;
+})();
 const ZCASH_RPC_URL = (() => {
   const url = process.env.ZCASH_RPC_URL;
 

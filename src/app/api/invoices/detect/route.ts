@@ -4,6 +4,20 @@ import {
   updateInvoiceStatus,
 } from "@/lib/invoiceStore";
 
+type ZcashTransactionOutput = {
+  to_account?: string;
+  memo?: string;
+  value?: number;
+};
+
+type ZcashTransaction = {
+  account_uuid?: string;
+  account_balance_delta?: number;
+  txid?: string;
+  mined_height?: number | null;
+  outputs?: ZcashTransactionOutput[];
+};
+
 const MERCHANT_ACCOUNT = (() => {
   const account = process.env.ZCASH_MERCHANT_ACCOUNT;
 
@@ -51,16 +65,16 @@ export async function GET() {
 
     const invoices = await Promise.all(
       storedInvoices.map(async (invoice) => {
-        const payment = transactions.find((tx: any) => {
+        const payment = transactions.find((tx: ZcashTransaction) => {
           if (
             tx.account_uuid !== MERCHANT_ACCOUNT ||
-            tx.account_balance_delta <= 0
+            (tx.account_balance_delta ?? 0) <= 0
           ) {
             return false;
           }
 
           return (tx.outputs ?? []).some(
-            (output: any) =>
+            (output: ZcashTransactionOutput) =>
               output.to_account === MERCHANT_ACCOUNT &&
               output.memo === invoice.invoiceId &&
               output.value === Math.round(invoice.amount * 100000000)

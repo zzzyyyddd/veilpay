@@ -3,11 +3,21 @@
 import { useState } from "react";
 import QRCode from "qrcode";
 
+type CreatedInvoice = {
+  invoiceId: string;
+  amount: number;
+  currency: "ZEC";
+  address: string;
+  paymentUri: string;
+  status: "pending";
+  createdAt: string;
+};
+
 export default function CreateInvoiceButton() {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [creating, setCreating] = useState(false);
-  const [invoice, setInvoice] = useState<any>(null);
+  const [invoice, setInvoice] = useState<CreatedInvoice | null>(null);
   const [qrCode, setQrCode] = useState("");
 
   async function createInvoice() {

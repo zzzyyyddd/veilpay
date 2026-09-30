@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { saveInvoice } from "@/lib/invoiceStore";
 
 const MERCHANT_ADDRESS =
-  "uregtest10mfyhxlm9xvffe9x463rr243wu96zqyu9lj6750j05740t36qs2ycmu6z6rej3mw76c7sfmckcf7aygqlckgthfwcuhu5l76d9a2vtdn6fmpql8w7m8p0ssqj3hnauhy2lag9lfyyzwkupp0k7r033rztx68su0v9q0fp25xrudlr9hj37jxjg9a9vurnfxgzqhw80xye2w7ywgganj";
+  process.env.ZCASH_MERCHANT_ADDRESS ?? "";
 
 export async function POST(request: Request) {
   try {

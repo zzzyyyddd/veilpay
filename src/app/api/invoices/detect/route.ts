@@ -4,13 +4,22 @@ import {
   updateInvoiceStatus,
 } from "@/lib/invoiceStore";
 
-const MERCHANT_ACCOUNT = "ebea6756-720d-4134-ae39-632bc58b82b5";
+const MERCHANT_ACCOUNT = process.env.ZCASH_MERCHANT_ACCOUNT;
+const ZCASH_RPC_URL = (() => {
+  const url = process.env.ZCASH_RPC_URL;
+
+  if (!url) {
+    throw new Error("ZCASH_RPC_URL is not configured");
+  }
+
+  return url;
+})();
 
 export async function GET() {
   try {
     const storedInvoices = await getInvoices();
 
-    const response = await fetch("http://127.0.0.1:8181", {
+    const response = await fetch(ZCASH_RPC_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

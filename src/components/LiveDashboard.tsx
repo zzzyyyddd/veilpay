@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type InvoiceData = {
   invoiceId: string;
   amount: number;
+  createdAt: string;
   status: "pending" | "paid";
   txid: string | null;
   minedHeight: number | null;
@@ -12,6 +13,7 @@ type InvoiceData = {
 
 export default function LiveDashboard() {
   const [invoices, setInvoices] = useState<InvoiceData[]>([]);
+  const [receipt, setReceipt] = useState<InvoiceData | null>(null);
 
   async function loadInvoices() {
     try {
@@ -79,18 +81,19 @@ export default function LiveDashboard() {
           {invoices.map((invoice) => (
             <Invoice
               key={invoice.invoiceId}
-              id={invoice.invoiceId}
-              amount={`${invoice.amount.toFixed(2)} ZEC`}
-              status={invoice.status === "paid" ? "Paid" : "Pending"}
-              confirmations={
-                invoice.minedHeight
-                  ? `Mined at block ${invoice.minedHeight}`
-                  : "Waiting for confirmation"
-              }
+              invoice={invoice}
+              onViewReceipt={() => setReceipt(invoice)}
             />
           ))}
         </div>
       </section>
+
+      {receipt && (
+        <ReceiptModal
+          invoice={receipt}
+          onClose={() => setReceipt(null)}
+        />
+      )}
     </>
   );
 }
@@ -105,26 +108,22 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 function Invoice({
-  id,
-  amount,
-  status,
-  confirmations,
+  invoice,
+  onViewReceipt,
 }: {
-  id: string;
-  amount: string;
-  status: "Paid" | "Pending";
-  confirmations: string;
+  invoice: InvoiceData;
+  onViewReceipt: () => void;
 }) {
-  const paid = status === "Paid";
+  const paid = invoice.status === "paid";
 
   return (
-    <div className="grid gap-4 px-6 py-5 sm:grid-cols-4 sm:items-center">
+    <div className="grid gap-4 px-6 py-5 sm:grid-cols-5 sm:items-center">
       <div>
-        <p className="font-mono text-sm">{id}</p>
+        <p className="font-mono text-sm">{invoice.invoiceId}</p>
         <p className="mt-1 text-xs text-zinc-600">Private invoice</p>
       </div>
 
-      <p className="font-medium">{amount}</p>
+      <p className="font-medium">{invoice.amount.toFixed(2)} ZEC</p>
 
       <div>
         <span
@@ -134,11 +133,97 @@ function Invoice({
               : "bg-amber-400/10 text-amber-300"
           }`}
         >
-          {status}
+          {paid ? "Paid" : "Pending"}
         </span>
       </div>
 
-      <p className="text-sm text-zinc-500 sm:text-right">{confirmations}</p>
+      <p className="text-sm text-zinc-500">
+        {invoice.minedHeight
+          ? `Block ${invoice.minedHeight}`
+          : "Waiting for confirmation"}
+      </p>
+
+      <div className="sm:text-right">
+        {paid && (
+          <button
+            type="button"
+            onClick={onViewReceipt}
+            className="rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:border-emerald-400/30 hover:text-emerald-400"
+          >
+            View receipt
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ReceiptModal({
+  invoice,
+  onClose,
+}: {
+  invoice: InvoiceData;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#101419] p-6 shadow-2xl">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm text-emerald-400">Payment confirmed</p>
+            <h3 className="mt-1 text-xl font-semibold">VeilPay Receipt</h3>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm text-zinc-500 hover:text-white"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <ReceiptRow label="Invoice" value={invoice.invoiceId} />
+          <ReceiptRow
+            label="Amount"
+            value={`${invoice.amount.toFixed(8)} ZEC`}
+          />
+          <ReceiptRow label="Status" value="Paid" />
+          <ReceiptRow
+            label="Created"
+            value={new Date(invoice.createdAt).toLocaleString()}
+          />
+          <ReceiptRow
+            label="Block"
+            value={String(invoice.minedHeight ?? "Pending")}
+          />
+
+          <div>
+            <p className="text-xs uppercase tracking-wider text-zinc-600">
+              Transaction ID
+            </p>
+            <p className="mt-2 break-all font-mono text-sm text-zinc-300">
+              {invoice.txid ?? "Pending"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-xl border border-emerald-400/10 bg-emerald-400/[0.05] p-4">
+          <p className="text-sm text-zinc-400">
+            Shielded Zcash payment confirmed for this invoice.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReceiptRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-6 border-b border-white/5 pb-4">
+      <p className="text-sm text-zinc-500">{label}</p>
+      <p className="text-right font-mono text-sm text-zinc-300">{value}</p>
     </div>
   );
 }

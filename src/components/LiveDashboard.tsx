@@ -14,6 +14,8 @@ type InvoiceData = {
 export default function LiveDashboard() {
   const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [receipt, setReceipt] = useState<InvoiceData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   async function loadInvoices() {
     try {
@@ -27,8 +29,14 @@ export default function LiveDashboard() {
 
       const data = await response.json();
       setInvoices(data.invoices ?? []);
+      setError(null);
     } catch (error) {
       console.error("Invoice refresh failed:", error);
+      setError(
+        error instanceof Error ? error.message : "Unable to load invoices"
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -72,8 +80,20 @@ export default function LiveDashboard() {
             </p>
           </div>
 
-          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-400">
-            Live · Zcash Regtest
+          <span
+            className={`rounded-full border px-3 py-1 text-xs ${
+              error
+                ? "border-red-400/20 bg-red-400/10 text-red-300"
+                : loading
+                  ? "border-amber-400/20 bg-amber-400/10 text-amber-300"
+                  : "border-emerald-400/20 bg-emerald-400/10 text-emerald-400"
+            }`}
+          >
+            {error
+              ? "Connection error"
+              : loading
+                ? "Connecting..."
+                : "Live · Zcash Regtest"}
           </span>
         </div>
 

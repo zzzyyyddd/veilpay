@@ -1,5 +1,4 @@
-import { promises as fs } from "fs";
-import path from "path";
+import postgres from "postgres";
 
 export type StoredInvoice = {
   invoiceId: string;
@@ -11,39 +10,82 @@ export type StoredInvoice = {
   createdAt: string;
 };
 
-const INVOICE_FILE = path.join(process.cwd(), "data", "invoices.json");
+const DATABASE_URL = (() => {
+  const url = process.env.DATABASE_URL;
+
+  if (!url) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+
+  return url;
+})();
+
+const sql = postgres(DATABASE_URL, {
+  ssl: "require",
+});
+
+type InvoiceRow = {
+  invoice_id: string;
+  amount: number;
+  currency: string;
+  address: string;
+  payment_uri: string;
+  status: "pending" | "paid";
+  created_at: Date;
+};
+
+function mapInvoice(row: InvoiceRow): StoredInvoice {
+  return {
+    invoiceId: row.invoice_id,
+    amount: Number(row.amount),
+    currency: "ZEC",
+    address: row.address,
+    paymentUri: row.payment_uri,
+    status: row.status,
+    createdAt: row.created_at.toISOString(),
+  };
+}
 
 export async function getInvoices(): Promise<StoredInvoice[]> {
-  try {
-    const data = await fs.readFile(INVOICE_FILE, "utf8");
-    return JSON.parse(data);
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      "code" in error &&
-      error.code === "ENOENT"
-    ) {
-      await fs.mkdir(path.dirname(INVOICE_FILE), { recursive: true });
-      await fs.writeFile(INVOICE_FILE, "[]", "utf8");
-      return [];
-    }
+  const rows = await sql<InvoiceRow[]>`
+    SELECT
+      invoice_id,
+      amount,
+      currency,
+      address,
+      payment_uri,
+      status,
+      created_at
+    FROM invoices
+    ORDER BY created_at DESC
+  `;
 
-    throw error;
-  }
+  return rows.map(mapInvoice);
 }
 
 export async function saveInvoice(
   invoice: StoredInvoice
 ): Promise<StoredInvoice> {
-  const invoices = await getInvoices();
-
-  invoices.unshift(invoice);
-
-  await fs.writeFile(
-    INVOICE_FILE,
-    JSON.stringify(invoices, null, 2),
-    "utf8"
-  );
+  await sql`
+    INSERT INTO invoices (
+      invoice_id,
+      amount,
+      currency,
+      address,
+      payment_uri,
+      status,
+      created_at
+    )
+    VALUES (
+      ${invoice.invoiceId},
+      ${invoice.amount},
+      ${invoice.currency},
+      ${invoice.address},
+      ${invoice.paymentUri},
+      ${invoice.status},
+      ${invoice.createdAt}
+    )
+  `;
 
   return invoice;
 }
@@ -52,17 +94,9 @@ export async function updateInvoiceStatus(
   invoiceId: string,
   status: "pending" | "paid"
 ): Promise<void> {
-  const invoices = await getInvoices();
-
-  const updated = invoices.map((invoice) =>
-    invoice.invoiceId === invoiceId
-      ? { ...invoice, status }
-      : invoice
-  );
-
-  await fs.writeFile(
-    INVOICE_FILE,
-    JSON.stringify(updated, null, 2),
-    "utf8"
-  );
+  await sql`
+    UPDATE invoices
+    SET status = ${status}
+    WHERE invoice_id = ${invoiceId}
+  `;
 }

@@ -1,36 +1,187 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VeilPay
 
-## Getting Started
+**Privacy-preserving merchant payments powered by Zcash.**
 
-First, run the development server:
+VeilPay is a merchant checkout prototype that lets businesses create Zcash payment invoices and automatically detect shielded payments without requiring customers to expose their public transaction history.
+
+Built for the **Crypto World's Fair 2026**.
+
+## Why VeilPay?
+
+Most crypto checkout systems make payment activity publicly visible on-chain. That can expose customer wallet history, balances, and transaction relationships.
+
+VeilPay explores a different checkout model:
+
+- Merchant creates an invoice
+- Customer receives a Zcash payment request and QR code
+- Customer pays using shielded ZEC
+- VeilPay detects the incoming payment automatically
+- The invoice moves from Pending to Paid after confirmation
+- Merchant receives a payment receipt with transaction details
+
+The goal is simple: make privacy-preserving crypto payments feel like normal merchant checkout infrastructure.
+
+## Working MVP
+
+The current prototype includes:
+
+- Merchant dashboard
+- ZEC invoice creation
+- Zcash payment URI generation
+- QR code checkout
+- Invoice ID embedded in the payment memo
+- Automatic shielded payment detection
+- Exact invoice matching by merchant account, memo, and amount
+- Pending payment detection before confirmation
+- Automatic Pending → Paid status updates
+- Live dashboard polling
+- Zcash connection status and automatic recovery
+- Payment receipts with TXID and mined block
+- Persistent local invoice storage for development
+
+The end-to-end payment flow has been tested on **Zcash regtest** using Z3/Zallet.
+
+## Payment Flow
+
+```text
+Merchant
+   |
+   v
+Create Invoice
+   |
+   v
+VeilPay generates payment request + QR
+   |
+   v
+Customer sends shielded ZEC
+   |
+   v
+Zallet / Zcash
+   |
+   v
+VeilPay detects memo + amount
+   |
+   +---- unconfirmed ----> Pending
+   |
+   +---- mined ----------> Paid
+                              |
+                              v
+                           Receipt
+```
+
+## Architecture
+
+```text
+Browser
+   |
+   v
+Next.js Merchant Dashboard
+   |
+   v
+VeilPay API
+   |
+   +--> Invoice Store
+   |
+   +--> Zcash RPC Router
+            |
+            v
+          Zallet
+            |
+            v
+          Zebra
+            |
+            v
+       Zcash Regtest
+```
+
+## Tech Stack
+
+- Next.js 16
+- React
+- TypeScript
+- Tailwind CSS
+- QRCode
+- Z3
+- Zallet
+- Zebra
+- Docker
+
+## Local Development
+
+### Requirements
+
+- Node.js 22+
+- npm
+- Docker Desktop
+- WSL2/Linux environment recommended
+- A running Z3/Zallet Zcash environment
+
+### Install
+```bash
+git clone <repository-url>
+cd veilpay
+npm install
+```
+
+Create your local environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Configure:
+
+```env
+ZCASH_RPC_URL=http://127.0.0.1:8181
+ZCASH_MERCHANT_ACCOUNT=your-merchant-account-uuid
+ZCASH_MERCHANT_ADDRESS=your-zcash-unified-address
+```
+
+Then start VeilPay:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Zcash Integration
 
-## Learn More
+VeilPay currently connects to a local Zcash regtest environment through the Z3 RPC router.
 
-To learn more about Next.js, take a look at the following resources:
+The detector reads wallet transactions and matches incoming payments using:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Merchant account
+2. Positive incoming balance
+3. Invoice memo
+4. Exact ZEC amount
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+An unmined matching transaction keeps the invoice in **Pending** state. Once the transaction has a mined height, VeilPay marks the invoice **Paid**.
 
-## Deploy on Vercel
+## Current Status
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+VeilPay is an MVP and hackathon prototype.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The core shielded checkout flow is working end-to-end on Zcash regtest. Production deployment, persistent hosted storage, remote Zcash infrastructure, authentication, and mainnet merchant onboarding are future work.
+
+## Roadmap
+
+- Hosted persistent invoice database
+- Remote Zcash backend
+- Merchant authentication
+- Mainnet-ready merchant onboarding
+- Webhook/API integrations for external merchants
+- Additional checkout and settlement options
+- Agent-friendly payment APIs
+
+## Privacy
+
+VeilPay is designed around minimizing unnecessary exposure of customer transaction history. It does not claim to make payments universally untraceable or anonymous.
+
+## License
+
+License information will be added before public release.

@@ -37,7 +37,7 @@ The current prototype includes:
 - Live dashboard polling
 - Zcash connection status and automatic recovery
 - Payment receipts with TXID and mined block
-- Persistent local invoice storage for development
+- Persistent invoice storage with Neon Postgres
 
 The end-to-end payment flow has been tested on **Zcash regtest** using Z3/Zallet.
 
@@ -80,7 +80,7 @@ Next.js Merchant Dashboard
    v
 VeilPay API
    |
-   +--> Invoice Store
+   +--> Neon Postgres
    |
    +--> Zcash RPC Router
             |
@@ -101,6 +101,8 @@ VeilPay API
 - TypeScript
 - Tailwind CSS
 - QRCode
+- Neon Postgres
+- Vercel
 - Z3
 - Zallet
 - Zebra
@@ -118,7 +120,7 @@ VeilPay API
 
 ### Install
 ```bash
-git clone <repository-url>
+git clone https://github.com/zzzyyyddd/veilpay.git
 cd veilpay
 npm install
 ```
@@ -132,6 +134,7 @@ cp .env.example .env.local
 Configure:
 
 ```env
+DATABASE_URL=your-postgres-connection-string
 ZCASH_RPC_URL=http://127.0.0.1:8181
 ZCASH_MERCHANT_ACCOUNT=your-merchant-account-uuid
 ZCASH_MERCHANT_ADDRESS=your-zcash-unified-address
@@ -164,13 +167,14 @@ An unmined matching transaction keeps the invoice in **Pending** state. Once the
 
 ## Current Status
 
-VeilPay is an MVP and hackathon prototype.
+VeilPay is a working hackathon MVP.
 
-The core shielded checkout flow is working end-to-end on Zcash regtest. Production deployment, persistent hosted storage, remote Zcash infrastructure, authentication, and mainnet merchant onboarding are future work.
+The web application is deployed on Vercel with persistent invoice storage powered by Neon Postgres. The complete checkout flow — invoice creation, shielded ZEC payment detection, confirmation, automatic Pending → Paid updates, and receipts — has been tested end-to-end using Zcash regtest with Z3/Zallet.
+
+The current Zcash infrastructure is still a regtest environment and is not intended for mainnet merchant payments. A secure remote Zcash backend, merchant authentication, and mainnet onboarding remain future work.
 
 ## Roadmap
 
-- Hosted persistent invoice database
 - Remote Zcash backend
 - Merchant authentication
 - Mainnet-ready merchant onboarding

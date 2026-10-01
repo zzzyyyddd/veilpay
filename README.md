@@ -6,6 +6,16 @@ VeilPay is a merchant checkout prototype that lets businesses create Zcash payme
 
 Built for the **Crypto World's Fair 2026**.
 
+## Demo
+
+### Merchant Dashboard
+
+![VeilPay merchant dashboard showing a confirmed shielded Zcash payment](docs/images/veilpay-dashboard-paid.png)
+
+### Payment Receipt
+
+![VeilPay payment receipt showing the confirmed transaction and mined block](docs/images/veilpay-receipt-paid.png)
+
 ## Why VeilPay?
 
 Most crypto checkout systems make payment activity publicly visible on-chain. That can expose customer wallet history, balances, and transaction relationships.

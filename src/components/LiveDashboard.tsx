@@ -223,7 +223,7 @@ function ReceiptModal({
             <p className="text-xs uppercase tracking-wider text-zinc-600">
               Transaction ID
             </p>
-            <p className="mt-2 break-all font-mono text-sm text-zinc-300">
+            <p className="mt-2 break-words font-mono text-xs leading-relaxed text-zinc-300">
               {invoice.txid ?? "Pending"}
             </p>
           </div>

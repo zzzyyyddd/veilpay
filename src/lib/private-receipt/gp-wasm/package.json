@@ -1,0 +1,17 @@
+{
+  "name": "gp-wasm",
+  "type": "module",
+  "description": "Glasspane browser verifier for receipt + raw Zcash transaction recovery",
+  "version": "0.0.1",
+  "license": "MIT",
+  "files": [
+    "gp_wasm_bg.wasm",
+    "gp_wasm.js",
+    "gp_wasm.d.ts"
+  ],
+  "main": "gp_wasm.js",
+  "types": "gp_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

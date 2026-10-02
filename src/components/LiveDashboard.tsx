@@ -191,7 +191,7 @@ function ReceiptModal({
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm text-emerald-400">Payment confirmed</p>
-            <h3 className="mt-1 text-xl font-semibold">VeilPay Receipt</h3>
+            <h3 className="mt-1 text-xl font-semibold">Payment Receipt</h3>
           </div>
 
           <button

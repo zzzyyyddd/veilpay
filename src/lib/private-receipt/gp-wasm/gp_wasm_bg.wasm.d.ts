@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
+export const issue_ironwood_receipt_with_raw_tx: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => [number, number, number, number];
 export const issue_orchard_receipt_with_raw_tx: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => [number, number, number, number];
 export const verify_receipt_with_raw_tx: (a: number, b: number, c: number, d: number) => [number, number, number, number];
 export const rustsecp256k1_v0_10_0_default_error_callback_fn: (a: number, b: number) => void;

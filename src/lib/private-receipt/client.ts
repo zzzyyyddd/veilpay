@@ -1,4 +1,5 @@
 import init, {
+  issue_ironwood_receipt_with_raw_tx,
   issue_orchard_receipt_with_raw_tx,
 } from "./gp-wasm/gp_wasm.js";
 
@@ -12,6 +13,7 @@ async function initializePrivateReceipt() {
 }
 
 export type PrivateReceiptInput = {
+  pool: "orchard" | "ironwood";
   network: "mainnet" | "testnet" | "regtest";
   txId: string;
   outputIndex: number;
@@ -25,7 +27,12 @@ export async function createPrivateReceipt(
 ): Promise<string> {
   await initializePrivateReceipt();
 
-  return issue_orchard_receipt_with_raw_tx(
+  const issueReceipt =
+    input.pool === "ironwood"
+      ? issue_ironwood_receipt_with_raw_tx
+      : issue_orchard_receipt_with_raw_tx;
+
+  return issueReceipt(
     input.network,
     input.txId,
     input.outputIndex,

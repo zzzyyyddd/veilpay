@@ -1,6 +1,45 @@
 /* @ts-self-types="./gp_wasm.d.ts" */
 
 /**
+ * Issue an unsigned Ironwood selective-disclosure receipt entirely client-side.
+ * @param {string} network
+ * @param {string} tx_id
+ * @param {number} output_index
+ * @param {string} ovk_hex
+ * @param {string} label
+ * @param {string} raw_tx_hex
+ * @returns {string}
+ */
+export function issue_ironwood_receipt_with_raw_tx(network, tx_id, output_index, ovk_hex, label, raw_tx_hex) {
+    let deferred7_0;
+    let deferred7_1;
+    try {
+        const ptr0 = passStringToWasm0(network, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(tx_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(ovk_hex, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passStringToWasm0(label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ptr4 = passStringToWasm0(raw_tx_hex, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len4 = WASM_VECTOR_LEN;
+        const ret = wasm.issue_ironwood_receipt_with_raw_tx(ptr0, len0, ptr1, len1, output_index, ptr2, len2, ptr3, len3, ptr4, len4);
+        var ptr6 = ret[0];
+        var len6 = ret[1];
+        if (ret[3]) {
+            ptr6 = 0; len6 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred7_0 = ptr6;
+        deferred7_1 = len6;
+        return getStringFromWasm0(ptr6, len6);
+    } finally {
+        wasm.__wbindgen_free(deferred7_0, deferred7_1, 1);
+    }
+}
+
+/**
  * Issue an unsigned Orchard selective-disclosure receipt entirely client-side.
  * @param {string} network
  * @param {string} tx_id

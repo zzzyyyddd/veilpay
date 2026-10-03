@@ -2,6 +2,11 @@
 /* eslint-disable */
 
 /**
+ * Issue an unsigned Ironwood selective-disclosure receipt entirely client-side.
+ */
+export function issue_ironwood_receipt_with_raw_tx(network: string, tx_id: string, output_index: number, ovk_hex: string, label: string, raw_tx_hex: string): string;
+
+/**
  * Issue an unsigned Orchard selective-disclosure receipt entirely client-side.
  */
 export function issue_orchard_receipt_with_raw_tx(network: string, tx_id: string, output_index: number, ovk_hex: string, label: string, raw_tx_hex: string): string;
@@ -21,6 +26,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly issue_ironwood_receipt_with_raw_tx: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => [number, number, number, number];
     readonly issue_orchard_receipt_with_raw_tx: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => [number, number, number, number];
     readonly verify_receipt_with_raw_tx: (a: number, b: number, c: number, d: number) => [number, number, number, number];
     readonly rustsecp256k1_v0_10_0_default_error_callback_fn: (a: number, b: number) => void;

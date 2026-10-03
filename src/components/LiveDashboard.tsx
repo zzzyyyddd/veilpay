@@ -65,7 +65,7 @@ export default function LiveDashboard() {
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <StatCard
           label="Total received"
-          value={`${totalReceived.toFixed(2)} ZEC`}
+          value={`${Number(totalReceived.toFixed(8))} ZEC`}
         />
         <StatCard label="Paid invoices" value={String(paidInvoices)} />
         <StatCard label="Pending invoices" value={String(pendingInvoices)} />
@@ -143,7 +143,7 @@ function Invoice({
         <p className="mt-1 text-xs text-zinc-600">Private invoice</p>
       </div>
 
-      <p className="font-medium">{invoice.amount.toFixed(2)} ZEC</p>
+      <p className="font-medium">{Number(invoice.amount.toFixed(8))} ZEC</p>
 
       <div>
         <span

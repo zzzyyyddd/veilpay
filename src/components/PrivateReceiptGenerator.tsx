@@ -14,6 +14,22 @@ type ProofMetadata = {
   rawTxHex: string;
 };
 
+type VerificationResult = {
+  status: string;
+  verifier: string;
+  network: string;
+  pool: string;
+  tx_id: string;
+  parsed_tx_id: string;
+  output_index: number;
+  label: string;
+  signature: string;
+  amount_zatoshis: number;
+  amount_zec: string;
+  memo: string;
+  recipient: string;
+};
+
 export default function PrivateReceiptGenerator() {
   const [invoiceId, setInvoiceId] = useState("");
   const [metadata, setMetadata] = useState<ProofMetadata | null>(null);
@@ -22,7 +38,7 @@ export default function PrivateReceiptGenerator() {
   const [ovkHex, setOvkHex] = useState("");
   const [receipt, setReceipt] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [verification, setVerification] = useState("");
+  const [verification, setVerification] = useState<VerificationResult | null>(null);
   const [verifying, setVerifying] = useState(false);
 
   async function loadPayment() {
@@ -36,6 +52,8 @@ export default function PrivateReceiptGenerator() {
     setLoading(true);
     setError("");
     setMetadata(null);
+    setReceipt("");
+    setVerification(null);
 
     try {
       const response = await fetch(
@@ -51,40 +69,6 @@ export default function PrivateReceiptGenerator() {
       setMetadata(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load payment.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadTestFixture() {
-    setLoading(true);
-    setError("");
-    setMetadata(null);
-    setReceipt("");
-
-    try {
-      const response = await fetch("/api/proof/test-fixture");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to load test fixture.");
-      }
-
-      setInvoiceId("TEST-IRONWOOD-E2E");
-      setMetadata({
-        invoiceId: "TEST-IRONWOOD-E2E",
-        amount: 0.00005,
-        currency: "ZEC",
-        network: data.network,
-        pool: data.pool,
-        txId: data.txId,
-        outputIndex: data.outputIndex,
-        rawTxHex: data.rawTxHex,
-      });
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load test fixture."
-      );
     } finally {
       setLoading(false);
     }
@@ -106,6 +90,7 @@ export default function PrivateReceiptGenerator() {
     setGenerating(true);
     setError("");
     setReceipt("");
+    setVerification(null);
 
     try {
       const result = await createPrivateReceipt({
@@ -136,7 +121,7 @@ export default function PrivateReceiptGenerator() {
 
     setVerifying(true);
     setError("");
-    setVerification("");
+    setVerification(null);
 
     try {
       const result = await verifyPrivateReceipt(
@@ -144,7 +129,7 @@ export default function PrivateReceiptGenerator() {
         metadata.rawTxHex
       );
 
-      setVerification(result);
+      setVerification(JSON.parse(result) as VerificationResult);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unable to verify private receipt."
@@ -184,16 +169,7 @@ export default function PrivateReceiptGenerator() {
           {loading ? "Loading..." : "Load payment"}
         </button>
 
-        {process.env.NODE_ENV !== "production" && (
-          <button
-            type="button"
-            onClick={loadTestFixture}
-            disabled={loading}
-            className="rounded-xl border border-emerald-400/30 px-5 py-3 text-sm font-semibold text-emerald-400 disabled:opacity-50"
-          >
-            Load Test Fixture
-          </button>
-        )}
+
       </div>
 
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
@@ -266,13 +242,52 @@ export default function PrivateReceiptGenerator() {
                 </button>
 
                 {verification && (
-                  <div className="mt-4 rounded-xl border border-emerald-400/20 bg-black/20 p-4">
-                    <p className="text-sm font-medium text-emerald-400">
-                      Receipt verified
-                    </p>
-                    <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-words font-mono text-xs text-zinc-300">
-                      {verification}
-                    </pre>
+                  <div className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-400/[0.05] p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-base font-semibold text-emerald-400">
+                          ✓ Receipt Verified
+                        </p>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          Cryptographically verified from the disclosed payment output.
+                        </p>
+                      </div>
+                      <span className="rounded-full border border-emerald-400/30 px-3 py-1 text-xs text-emerald-400">
+                        {verification.pool}
+                      </span>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs text-zinc-500">Amount</p>
+                        <p className="mt-1 font-medium">{verification.amount_zec} ZEC</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-zinc-500">Network</p>
+                        <p className="mt-1 font-medium capitalize">{verification.network}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-zinc-500">Output</p>
+                        <p className="mt-1 font-medium">#{verification.output_index}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-zinc-500">Signature</p>
+                        <p className="mt-1 font-medium capitalize">{verification.signature}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-xs text-zinc-500">Recipient</p>
+                      <p className="mt-1 break-all font-mono text-xs text-zinc-300">
+                        {verification.recipient}
+                      </p>
+                    </div>
+
+                    <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-3">
+                      <p className="text-xs text-zinc-400">
+                        Only this selected payment output was disclosed. No wallet-wide viewing key is included in the receipt.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

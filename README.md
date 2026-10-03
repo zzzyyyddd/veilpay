@@ -1,12 +1,118 @@
 # VeilPay
 
-**Privacy-preserving merchant payments powered by Zcash.**
+**Private commerce with selectively verifiable Zcash receipts.**
 
-VeilPay is a merchant checkout prototype that lets businesses create Zcash payment invoices and automatically detect shielded payments without requiring customers to expose their public transaction history.
+VeilPay is a privacy-preserving payment prototype for merchants. It combines shielded Zcash checkout with selective payment disclosure: a customer can prove one specific payment without giving a verifier wallet-wide viewing capability.
 
-Built for the **Crypto World's Fair 2026**.
+Built for **Crypto World's Fair 2026**.
 
-## Demo
+## Live Demo
+
+**Production:** https://veilpay-psi.vercel.app
+
+The deployed application includes an interactive **Mainnet Proof**. Click **Verify Mainnet Proof** to cryptographically verify a real Zcash mainnet Ironwood payment directly in the browser.
+
+No customer OVK, seed phrase, or wallet-wide viewing key is required by the verifier.
+
+## What VeilPay Solves
+
+Public blockchains can make ordinary commerce unnecessarily revealing.
+
+A merchant may need evidence that a specific payment happened, while a customer may not want to expose unrelated wallet activity, balances, or transaction history.
+
+VeilPay separates those concerns:
+
+1. Pay privately using shielded ZEC.
+2. Settle directly to the merchant.
+3. Detect and track the payment.
+4. Generate a receipt for one selected payment output.
+5. Allow a third party to verify that output without receiving wallet-wide viewing capability.
+
+The core idea is:
+
+> **Private by default. Provable when needed.**
+
+## Real Mainnet Proof
+
+VeilPay includes a reproducible selective-disclosure proof built from a real Zcash mainnet transaction.
+
+### Mainnet transaction
+
+- **Network:** Zcash Mainnet
+- **Pool:** Ironwood
+- **Transaction version:** V6
+- **Amount disclosed:** `0.00001000 ZEC` / `1000 zatoshis`
+- **Memo:** `VEILPAY-MAINNET-001`
+- **Selected output:** `#1`
+- **TXID:** `0ebda643fcf5c86d071a9cdc1cb2a64113528c67ab02ef0e016d30e7735b22ad`
+
+The transaction contains multiple Ironwood actions. VeilPay does not assume that the payment is output `0`; the correct selected output is explicitly identified and verified.
+
+### Browser verification
+
+The public demo loads:
+
+- `public/proofs/veilpay-mainnet-receipt.json`
+- `public/proofs/veilpay-mainnet-tx.hex`
+
+The browser then runs the WebAssembly verifier locally.
+
+A successful verification recovers only the selected payment details:
+
+```text
+Mainnet Receipt Verified
+
+Network: mainnet
+Pool: ironwood
+Amount: 0.00001000 ZEC
+Memo: VEILPAY-MAINNET-001
+Output: #1
+```
+
+The verifier does **not** need the customer's OVK.
+
+The receipt contains an output-specific disclosure key used to recover the selected output, rather than granting wallet-wide viewing capability.
+
+## Selective Receipt Flow
+
+```text
+Customer wallet
+      |
+      | shielded ZEC payment
+      v
+Zcash Mainnet / Ironwood
+      |
+      | transaction
+      v
+Selected payment output
+      |
+      | sender-side local receipt generation
+      | using OVK locally
+      v
+Selective receipt
+      |
+      | receipt + public raw transaction
+      v
+Browser WASM verifier
+      |
+      +--> recipient
+      +--> amount
+      +--> memo
+      +--> selected output
+      |
+      v
+VERIFIED
+
+Customer OVK is not given to the verifier.
+```
+
+Receipt generation and verification are intentionally separate.
+
+The sender's OVK is used locally when creating the selective receipt. Verification uses the resulting receipt and transaction data and does not require the OVK.
+
+## Merchant Checkout MVP
+
+VeilPay also implements an end-to-end merchant checkout flow.
 
 ### Merchant Dashboard
 
@@ -16,24 +122,7 @@ Built for the **Crypto World's Fair 2026**.
 
 ![VeilPay payment receipt showing the confirmed transaction and mined block](docs/images/veilpay-receipt-paid.png)
 
-## Why VeilPay?
-
-Most crypto checkout systems make payment activity publicly visible on-chain. That can expose customer wallet history, balances, and transaction relationships.
-
-VeilPay explores a different checkout model:
-
-- Merchant creates an invoice
-- Customer receives a Zcash payment request and QR code
-- Customer pays using shielded ZEC
-- VeilPay detects the incoming payment automatically
-- The invoice moves from Pending to Paid after confirmation
-- Merchant receives a payment receipt with transaction details
-
-The goal is simple: make privacy-preserving crypto payments feel like normal merchant checkout infrastructure.
-
-## Working MVP
-
-The current prototype includes:
+The checkout prototype includes:
 
 - Merchant dashboard
 - ZEC invoice creation
@@ -45,13 +134,17 @@ The current prototype includes:
 - Pending payment detection before confirmation
 - Automatic Pending → Paid status updates
 - Live dashboard polling
-- Zcash connection status and automatic recovery
 - Payment receipts with TXID and mined block
 - Persistent invoice storage with Neon Postgres
+- Browser-side selective receipt generation
+- Browser-side selective receipt verification
+- Ironwood receipt support
 
-The end-to-end payment flow has been tested on **Zcash regtest** using Z3/Zallet.
+The automated merchant payment-detection lifecycle was tested end-to-end in a controlled Zcash regtest environment using Z3/Zallet.
 
-## Payment Flow
+The selective receipt verifier was additionally demonstrated against a **real Zcash mainnet Ironwood transaction**.
+
+## Checkout Flow
 
 ```text
 Merchant
@@ -66,7 +159,7 @@ VeilPay generates payment request + QR
 Customer sends shielded ZEC
    |
    v
-Zallet / Zcash
+Zcash wallet / network
    |
    v
 VeilPay detects memo + amount
@@ -80,6 +173,10 @@ VeilPay detects memo + amount
 ```
 
 ## Architecture
+
+VeilPay currently demonstrates two complementary paths.
+
+### 1. Merchant payment infrastructure
 
 ```text
 Browser
@@ -104,19 +201,87 @@ VeilPay API
        Zcash Regtest
 ```
 
+This path demonstrates invoice creation, automatic shielded payment detection, confirmation tracking, and merchant receipts.
+
+### 2. Selective mainnet verification
+
+```text
+Real Zcash Mainnet Ironwood Transaction
+                +
+        Selective Receipt
+                |
+                v
+        VeilPay Web App
+                |
+                v
+       Browser WebAssembly
+                |
+                v
+       Selected Output Only
+                |
+                +--> recipient
+                +--> amount
+                +--> memo
+                |
+                v
+             VERIFIED
+```
+
+The public Mainnet Proof does not depend on the developer's local Z3/Zallet environment.
+
+## Privacy Model
+
+VeilPay is designed around **data minimization**.
+
+A normal payment should not require a customer to disclose unrelated wallet history.
+
+When proof is needed, VeilPay's selective receipt flow discloses one selected payment output rather than a wallet-wide viewing capability.
+
+The project does not claim that Zcash payments are universally anonymous or untraceable, and it does not treat selective disclosure as a replacement for operational security.
+
+## Security Properties Demonstrated
+
+The current prototype demonstrates:
+
+- Shielded Zcash payments
+- Direct merchant settlement
+- Output-specific disclosure
+- Browser-local receipt generation
+- Browser-local cryptographic verification
+- No OVK required by the verifier
+- No seed phrase or spending key required by the verifier
+- Explicit output selection rather than assuming output index `0`
+
+In the mainnet test transaction, verification using the wrong output index failed, while the correct output recovered the expected recipient, amount, and memo.
+
 ## Tech Stack
 
 - Next.js 16
 - React
 - TypeScript
 - Tailwind CSS
-- QRCode
-- Neon Postgres
-- Vercel
+- Rust
+- WebAssembly
+- Zcash Ironwood
 - Z3
 - Zallet
 - Zebra
+- Neon Postgres
 - Docker
+- Vercel
+
+## Repository Proof Fixtures
+
+The public mainnet verification demo uses:
+
+```text
+public/proofs/veilpay-mainnet-receipt.json
+public/proofs/veilpay-mainnet-tx.hex
+```
+
+These fixtures contain the selective receipt and public transaction data required for verification.
+
+They do **not** contain the customer's OVK, seed phrase, or private spending key.
 
 ## Local Development
 
@@ -124,33 +289,30 @@ VeilPay API
 
 - Node.js 22+
 - npm
+
+For the merchant regtest payment-detection environment:
+
 - Docker Desktop
-- WSL2/Linux environment recommended
-- A running Z3/Zallet Zcash environment
+- WSL2/Linux recommended
+- Z3/Zallet/Zebra environment
 
 ### Install
+
 ```bash
 git clone https://github.com/zzzyyyddd/veilpay.git
 cd veilpay
 npm install
 ```
 
-Create your local environment file:
+Create a local environment file:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Configure:
+For the merchant checkout backend, configure the required database and Zcash RPC environment variables.
 
-```env
-DATABASE_URL=your-postgres-connection-string
-ZCASH_RPC_URL=http://127.0.0.1:8181
-ZCASH_MERCHANT_ACCOUNT=your-merchant-account-uuid
-ZCASH_MERCHANT_ADDRESS=your-zcash-unified-address
-```
-
-Then start VeilPay:
+Then run:
 
 ```bash
 npm run dev
@@ -162,40 +324,59 @@ Open:
 http://localhost:3000
 ```
 
-## Zcash Integration
+## Verification Without a Local Zcash Node
 
-VeilPay currently connects to a local Zcash regtest environment through the Z3 RPC router.
+The interactive Mainnet Proof is intentionally different from the merchant regtest backend.
 
-The detector reads wallet transactions and matches incoming payments using:
+The proof fixtures are bundled with the application, and cryptographic verification runs in the browser through WebAssembly.
 
-1. Merchant account
-2. Positive incoming balance
-3. Invoice memo
-4. Exact ZEC amount
-
-An unmined matching transaction keeps the invoice in **Pending** state. Once the transaction has a mined height, VeilPay marks the invoice **Paid**.
+This allows reviewers to reproduce the selective verification demo without running the developer's local Z3/Zallet stack and without receiving the customer's OVK.
 
 ## Current Status
 
-VeilPay is a working hackathon MVP.
+VeilPay is a working hackathon prototype.
 
-The web application is deployed on Vercel with persistent invoice storage powered by Neon Postgres. The complete checkout flow — invoice creation, shielded ZEC payment detection, confirmation, automatic Pending → Paid updates, and receipts — has been tested end-to-end using Zcash regtest with Z3/Zallet.
+**Demonstrated today:**
 
-The current Zcash infrastructure is still a regtest environment and is not intended for mainnet merchant payments. A secure remote Zcash backend, merchant authentication, and mainnet onboarding remain future work.
+- End-to-end shielded merchant checkout lifecycle in regtest
+- Automatic Pending → Paid detection
+- Persistent merchant invoice state
+- Selective receipt generation
+- Ironwood selective output recovery
+- Real mainnet Ironwood transaction
+- Successful selective receipt verification in the browser
+- Public production deployment of the interactive mainnet verifier
+
+**Not yet production-complete:**
+
+- Production merchant authentication
+- Fully hosted live merchant transaction monitoring
+- Automated wallet integration for obtaining sender-side receipt material
+- Production key-management hardening
+- External merchant webhooks/SDKs
+- Full production security review
+
+The public Mainnet Proof demonstrates the cryptographic selective-verification path. The merchant auto-detection backend remains a prototype environment rather than a claim of production-ready payment infrastructure.
 
 ## Roadmap
 
-- Remote Zcash backend
-- Merchant authentication
-- Mainnet-ready merchant onboarding
-- Webhook/API integrations for external merchants
-- Additional checkout and settlement options
-- Agent-friendly payment APIs
+- Production merchant authentication
+- Hosted Zcash payment monitoring
+- Wallet-native selective receipt generation
+- Merchant webhooks and API
+- Checkout SDK
+- Receipt sharing and verification links
+- Multi-merchant account isolation
+- Production security hardening
 
-## Privacy
+## Design Principle
 
-VeilPay is designed around minimizing unnecessary exposure of customer transaction history. It does not claim to make payments universally untraceable or anonymous.
+VeilPay is not trying to make private payments impossible to prove.
+
+It is trying to make proof **intentional and scoped**:
+
+> **Pay privately. Prove selectively.**
 
 ## License
 
-License information will be added before public release.
+See repository license information and third-party dependency licenses for applicable terms.

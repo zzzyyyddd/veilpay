@@ -83,14 +83,14 @@ export default function LiveDashboard() {
           <span
             className={`rounded-full border px-3 py-1 text-xs ${
               error
-                ? "border-red-400/20 bg-red-400/10 text-red-300"
+                ? "border-zinc-400/20 bg-zinc-400/10 text-zinc-400"
                 : loading
                   ? "border-amber-400/20 bg-amber-400/10 text-amber-300"
                   : "border-emerald-400/20 bg-emerald-400/10 text-emerald-400"
             }`}
           >
             {error
-              ? "Connection error"
+              ? "Regtest backend offline"
               : loading
                 ? "Connecting..."
                 : "Live · Zcash Regtest"}

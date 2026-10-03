@@ -14,6 +14,12 @@ The deployed application includes an interactive **Mainnet Proof**. Click **Veri
 
 No customer OVK, seed phrase, or wallet-wide viewing key is required by the verifier.
 
+### Mainnet Proof — Verified in Browser
+
+![VeilPay real Zcash mainnet Ironwood selective receipt verification](docs/images/veilpay-mainnet-proof.png)
+
+*Real Zcash mainnet Ironwood transaction selectively verified in-browser using VeilPay's WebAssembly verifier.*
+
 ## What VeilPay Solves
 
 Public blockchains can make ordinary commerce unnecessarily revealing.

@@ -1,6 +1,7 @@
 import CreateInvoiceButton from "@/components/CreateInvoiceButton";
 import LiveDashboard from "@/components/LiveDashboard";
 import PrivateReceiptGenerator from "@/components/PrivateReceiptGenerator";
+import MainnetProof from "@/components/MainnetProof";
 
 export default function Home() {
   return (
@@ -36,6 +37,8 @@ export default function Home() {
           <LiveDashboard />
 
           <PrivateReceiptGenerator />
+
+          <MainnetProof />
         </section>
 
         <footer className="mt-8 flex items-center justify-between text-xs text-zinc-600">

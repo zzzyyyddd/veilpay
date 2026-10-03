@@ -1,6 +1,7 @@
 import init, {
   issue_ironwood_receipt_with_raw_tx,
   issue_orchard_receipt_with_raw_tx,
+  verify_receipt_with_raw_tx,
 } from "./gp-wasm/gp_wasm.js";
 
 let initialized = false;
@@ -40,4 +41,12 @@ export async function createPrivateReceipt(
     input.label,
     input.rawTxHex
   );
+}
+
+export async function verifyPrivateReceipt(
+  receiptInput: string,
+  rawTxHex: string
+): Promise<string> {
+  await initializePrivateReceipt();
+  return verify_receipt_with_raw_tx(receiptInput, rawTxHex);
 }

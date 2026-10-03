@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
     console.error("Proof metadata error:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: "Unable to prepare proof metadata.",
       },
       { status: 500 }
     );

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "VeilPay",
-  description: "Privacy-preserving payments powered by Zcash",
+  title: "VeilPay | Private Zcash Payments",
+  description: "Privacy-preserving merchant payments powered by Zcash. Create shielded invoices and generate selectively verifiable payment receipts.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
